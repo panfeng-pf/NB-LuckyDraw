@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8" />
+	
+	<title>Lucky</title>
+	
+	<link rel="stylesheet" type="text/css" href="./lib/bootstrap-3.3.2-dist/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="./lib/font-awesome-4.3.0/css/font-awesome.min.css">
+	
+	<link rel="stylesheet" type="text/css" href="./css/luckyone.css" />
+</head>
+
+<body>
+	<!-- ==================================== -->
+	<!-- toolbar on top-right -->
+	<!-- ==================================== -->
+	<div style="text-align:right;">
+		<button id="btn-home" class="btn btn-sm btn-info" title="抽奖任务">
+			<i class="fa fa-fw fa-home fa-lg"></i>
+		</button>
+		
+		<div id="common-tools" style="display:inline-block;"></div>
+		
+	</div>
+	
+	<!-- ==================================== -->
+	<!-- title -->
+	<!-- ==================================== -->
+	<div class="milky">
+		抽奖 - <span id="result-name"></span>
+	</div>
+	<div class="milky" style="font-weight:normal;font-size:44px;">
+		<span id="curr-grade"></span>
+		<span id="curr-grade-count" style="font-size:33px;"></span>
+	</div>
+	
+	<!-- ==================================== -->
+	<!-- lucky draw panel -->
+	<!-- ==================================== -->
+	<div class="form-inline" style="margin-top:30px;">
+		<div class="form-group" style="margin-right:20px;">
+			<div class="input-group">
+				<div class="input-group-addon">奖项</div>
+				<select id="grade" class="form-control"></select>
+			</div>
+		</div>
+		
+		<div class="form-group" style="margin-right:20px;">
+			<div class="input-group">
+				<div class="input-group-addon">批次容量</div>
+				<select id="batch-capacity" class="form-control"></select>
+			</div>
+		</div>
+		
+		<button id="btn-launch" stat="stopped" class="btn btn-success">
+			<i class="fa fa-play"></i>
+			<span>开始</span>
+		</button>
+		<button id="btn-cancel" class="btn btn-default">取消</button>
+	</div>
+	
+	<!-- ==================================== -->
+	<!-- current lucky-ones panel -->
+	<!-- ==================================== -->
+	<div id="draw-panel" style="margin-top:30px;"></div>
+	
+	<div style="position:fixed;bottom:0;left:48%;">
+		<div id="btn-result" stat="close" style="
+			border-radius:60px 60px 0 0;
+			background:darkred;
+			color:yellow;
+			width:120px;
+			height:60px;
+			text-align:center;
+			line-height:70px;
+			font-size:20px;
+			font-weight:bold;
+			cursor:pointer;
+			margin:auto;
+		">
+			查看结果
+		</div>
+		<div style="width:100%;border-radius:10px;background:darkred;"></div>
+	</div>
+	
+	<!-- ==================================== -->
+	<!-- load javascript -->
+	<!-- ==================================== -->
+	<script type="text/javascript" src="./lib/jquery-1.11.2.min.js"></script>
+	<script type="text/javascript" src="./lib/bootstrap-3.3.2-dist/js/bootstrap.min.js"></script>
+	
+	<script type="text/javascript" src="./js/lucky-util.js"></script>
+	<script type="text/javascript" src="./js/lucky-draw.js"></script>
+	<script type="text/javascript" src="./js/lucky-result.js"></script>
+	<script>
+		$(function() {
+			var getLuckyCountByGrade = function(grade) {
+				var resultData = luckyResult.readResult(resultName);
+				var luckyList = resultData[grade];
+				if(luckyList == undefined) return 0;
+				else return luckyList.length;
+			}
+			
+			//initializition
+			$('#common-tools').load('./common-tools.html');
+			
+			//get param from request URL
+			var jsonQuery = LuckyUtil.parseUrlQuery();
+			var home = jsonQuery.home;
+			var resultName = jsonQuery.result;
+			$('#result-name').text(resultName);
+			
+			//quick launch buttons
+			$('#btn-home').click(function() {
+				location.href = 'index.html';
+			});
+			
+			//major operations
+			var whoFileInfo = {
+				filename: 'who.png'
+				, id: ''
+				, name: 'who'
+				, ext: '.png'
+			};
+			var luckyWhoHtml = LuckyUtil.genLuckyOneHtml('./img', whoFileInfo);
+			
+			var jqGrade = $('#grade');
+			for(var i = 1; i <= 10; i ++) {
+				jqGrade.append('<option value="' + i + '">' + i + '</option>');
+			}
+			
+			var jqBatchCapacity = $('#batch-capacity');
+			for(var i = 1; i <= 20; i ++) {
+				jqBatchCapacity.append('<option value="' + i + '">' + i + '</option>');
+			}
+			
+			var luckyResult = LuckyResult.createNew(home + '/result');
+			var resultData = luckyResult.readResult(resultName);
+			var luckyList = [];
+			for(var grade in resultData) {
+				var gradeLuckyList = resultData[grade];
+				gradeLuckyList.forEach(function(luckyOne) {
+					luckyList.push(luckyOne);
+				});
+			}
+			
+			var jqDrawPanel = $('#draw-panel');
+			
+			var luckyDraw = LuckyDraw.createNew(jqDrawPanel, '.lucky-one', home + '/candidate', luckyList);
+			
+			jqGrade.change(function() {
+				jqBatchCapacity.change();
+				
+				var grade = jqGrade.val();
+				var count = getLuckyCountByGrade(grade);
+				
+				$('#curr-grade').text('奖项 ' + grade);
+				$('#curr-grade-count').text('(' + count + '人)');
+			}).change();
+			
+			var jqBtnResult = $('#btn-result');
+			var jqBtnLaunch = $('#btn-launch');
+			jqBtnLaunch.click(function() {
+				//close luck result
+				if(jqBtnResult.attr('stat') == 'open') {
+					jqBtnResult.click();
+				}
+				
+				var jqBtnLaunch = $(this);
+				var stat = jqBtnLaunch.attr('stat');
+				
+				if('stopped' == stat) {
+					//reset draw panel
+					jqBatchCapacity.change();
+					
+					if(luckyDraw.start()) {
+						//disable select
+						jqGrade.prop('disabled', true);
+						jqBatchCapacity.prop('disabled', true);
+						
+						//update launch button text and status
+						jqBtnLaunch.attr('stat', 'running');
+						jqBtnLaunch.find('i').removeClass('fa-play').addClass('fa-stop');
+						jqBtnLaunch.find('span').text('停止');
+					}
+				} else if('running' == stat) {
+					nameList = luckyDraw.stop();
+					
+					//enable select
+					jqGrade.prop('disabled', false);
+					jqBatchCapacity.prop('disabled', false);
+					
+					//move draw result to lucky panel
+					var jqLuckySet = jqDrawPanel.find('.valid');
+					
+					//show un-lucky button for current lucky list
+					jqLuckySet.find('.btn-unlucky').show();
+					
+					//reset draw panel
+					//jqBatchCapacity.change();
+					
+					//update launch button text and status
+					jqBtnLaunch.attr('stat', 'stopped');
+					jqBtnLaunch.find('i').removeClass('fa-stop').addClass('fa-play');
+					jqBtnLaunch.find('span').text('开始');
+					
+					//save lucky list into file
+					var grade = jqGrade.val();
+					if(resultData[grade] == undefined) {
+						resultData[grade] = nameList;
+					} else {
+						resultData[grade] = resultData[grade].concat(nameList);
+					}
+					luckyResult.writeResult(resultName, resultData);
+					
+					//show current grade lucky count
+					var count = getLuckyCountByGrade(grade);
+					$('#curr-grade-count').text('(' + count + '人)');
+				}
+			});
+			
+			$('#btn-cancel').click(function() {
+				var stat = jqBtnLaunch.attr('stat');
+				
+				if('running' == stat) {
+					nameList = luckyDraw.cancel();
+					
+					//enable select
+					jqGrade.prop('disabled', false);
+					jqBatchCapacity.prop('disabled', false);
+					
+					//reset draw panel
+					jqBatchCapacity.change();
+					
+					//update launch button text and status
+					jqBtnLaunch.attr('stat', 'stopped');
+					jqBtnLaunch.find('i').removeClass('fa-stop').addClass('fa-play');
+					jqBtnLaunch.find('span').text('开始');
+				}
+			});
+			
+			jqBatchCapacity.change(function() {
+				var capacity = jqBatchCapacity.val();
+				
+				jqDrawPanel.empty();
+				for(var i = 0; i < capacity; i ++) {
+					jqDrawPanel.append(luckyWhoHtml);
+				}
+			}).change();
+			
+			jqDrawPanel.on('click', '.btn-unlucky', function() {
+				//close luck result
+				if(jqBtnResult.attr('stat') == 'open') {
+					jqBtnResult.click();
+				}
+				
+				var jqBtn = $(this);
+				var jqName = jqBtn.prev();
+				var name = jqName.text();
+				
+				//save lucky list into file
+				var grade = jqGrade.val();
+				var luckyList = resultData[grade];
+				if(luckyList != undefined) {
+					for(var i = luckyList.length - 1; i >= 0; i --) {
+						if(luckyList[i].name == name) {
+							luckyList.splice(i, 1);
+							break;
+						}
+					}
+					luckyResult.writeResult(resultName, resultData);
+				}
+				
+				var jqUnluckOne = jqBtn.parent();
+				jqUnluckOne.after(luckyWhoHtml);
+				jqUnluckOne.remove();
+				
+				//show current grade lucky count
+				var count = getLuckyCountByGrade(grade);
+				$('#curr-grade-count').text('(' + count + '人)');
+			});
+			
+			jqBtnResult.click(function() {
+				var jqBotBar = jqBtnResult.parent();
+				var jqResult = jqBtnResult.next();
+				
+				if(jqBotBar.css('position') == 'fixed') {
+					jqBotBar.css({'position': 'static'});
+					jqResult.load('lucky-result.html?' + LuckyUtil.genUrlQuery(jsonQuery));
+					jqBtnResult.attr('stat', 'open');
+				} else {
+					jqBotBar.css({'position': 'fixed'});
+					jqResult.text('');
+					jqBtnResult.attr('stat', 'close');
+				}
+			});
+		});
+		
+	</script>
+</body>
+
+</html>

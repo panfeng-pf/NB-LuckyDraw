@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8" />
+	
+	<title>Lucky</title>
+	
+	<link rel="stylesheet" type="text/css" href="./lib/bootstrap-3.3.2-dist/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="./lib/font-awesome-4.3.0/css/font-awesome.min.css">
+	
+	<link rel="stylesheet" type="text/css" href="./css/luckyone.css" />
+</head>
+
+<body>
+	<!-- ==================================== -->
+	<!-- toolbar on top-right -->
+	<!-- ==================================== -->
+	<div style="text-align:right;">
+		<div id="common-tools" style="display:inline-block;"></div>
+		
+		<div style="display:none;">Home: <i id="home-path"></i></div>
+	</div>
+	
+	<!-- ==================================== -->
+	<!-- title -->
+	<!-- ==================================== -->
+	<div class="milky">抽奖任务</div>
+	
+	<!-- ==================================== -->
+	<!-- task list panel -->
+	<!-- ==================================== -->
+	<div style="padding:50px;">
+		<table class="table" style="width:80%;" align="center">
+			<thead>
+				<tr>
+					<th>任务名</th>
+					<th>操作</th>
+				</tr>
+			</thead>
+			<tbody id="task-list">
+				<tr>
+					<td style="padding:10px;">
+						<input type="text" id="new-result-name" class="form-control">
+					</td>
+					<td style="padding:10px;">
+						<button id="btn-create" class="btn btn-success">
+							<i class="fa fa-plus"></i> 新增任务
+						</button>
+					</td>
+				</tr>
+				<tr id="task-template" style="display:none;">
+					<td class="task-name" style="padding:10px;vertical-align:middle;"></td>
+					<td class="task-action" style="padding:10px;">
+						<button class="btn btn-primary btn-draw">
+							<i class="fa fa-magic"></i> 进入抽奖
+						</button>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	
+	<!-- ==================================== -->
+	<!-- load javascript -->
+	<!-- ==================================== -->
+	<script type="text/javascript" src="./lib/jquery-1.11.2.min.js"></script>
+	<script type="text/javascript" src="./lib/bootstrap-3.3.2-dist/js/bootstrap.min.js"></script>
+	
+	<script type="text/javascript" src="./js/lucky-util.js"></script>
+	<script type="text/javascript" src="./js/lucky-result.js"></script>
+	<script>
+		$(function() {
+			//initializition
+			LuckyUtil.fullscn();
+			$('#common-tools').load('./common-tools.html');
+			
+			var homePath = LuckyUtil.getHome();
+			$('#home-path').text(homePath);
+			
+			//quick launch buttons
+			$('#btn-test').click(function() {
+				location.href = 'test/index.html?' + LuckyUtil.genUrlQuery({'home':homePath});
+			});
+			
+			//major operations
+			var luckyResult = LuckyResult.createNew(homePath + '/result');
+			var resultNameList = luckyResult.getResultList();
+			
+			var jqTaskList = $('#task-list');
+			var jqTaskTpl = $('#task-template');
+			for(var i = 0; i < resultNameList.length; i ++) {
+				var name = resultNameList[i];
+				
+				var jqTask = jqTaskTpl.clone();
+				jqTaskList.append(jqTask);
+				jqTask.removeAttr('id').show()
+					.find('td.task-name').text(name);
+			}
+			
+			$('#btn-create').click(function() {
+				var newName = $('#new-result-name').val().trim();
+				if(newName.length > 0) {
+					luckyResult.createResult(newName);
+					location.reload();
+				} else {
+					alert('任务名不能为空');
+				}
+			});
+			
+			$('.btn-draw').click(function() {
+				var jqBtn = $(this);
+				var jqTask = jqBtn.closest('tr');
+				var resultName = jqTask.find('td.task-name').text();
+				location.href = 'lucky-draw.html?' + LuckyUtil.genUrlQuery({result:resultName, home:homePath});
+			});
+		});
+	</script>
+</body>
+
+</html>

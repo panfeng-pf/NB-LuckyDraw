@@ -1,0 +1,74 @@
+<div style="padding:20px;">
+	<div style="text-align:right;">
+		<button id="btn-download" class="btn btn-info" title="下载结果">
+			<i class="fa fa-fw fa-download fa-lg"></i> 下载结果
+		</button>
+	</div>
+	
+	<!-- ==================================== -->
+	<!-- whole lucky result panel -->
+	<!-- ==================================== -->
+	<div id="result-panel"></div>
+	
+	<!-- ==================================== -->
+	<!-- load javascript -->
+	<!-- ==================================== -->
+	<script>
+		$(function() {
+			//get param from request URL
+			var jsonQuery = LuckyUtil.parseUrlQuery();
+			var home = jsonQuery.home;
+			var resultName = jsonQuery.result;
+			
+			//quick launch buttons
+			$('#btn-home').click(function() {
+				location.href = 'index.html';
+			});
+			
+			$('#btn-draw').click(function() {
+				location.href = 'lucky-draw.html?' + LuckyUtil.genUrlQuery(jsonQuery);
+			});
+			
+			//major operations
+			var luckyResult = LuckyResult.createNew(home + '/result');
+			var resultData = luckyResult.readResult(resultName);
+			
+			var jqResultPanel = $('#result-panel');
+			for(var grade in resultData) {
+				var luckyList = resultData[grade];
+				
+				jqResultPanel.append('<h3>奖项 ' + grade + ' [ ' + luckyList.length + ' 人 ]</h3>');
+				for(var i = 0; i < luckyList.length; i ++) {
+					var luckyOneHtml = LuckyUtil.genLuckyOneHtml('./candidate', luckyList[i]);
+					jqResultPanel.append(luckyOneHtml);
+				}
+				jqResultPanel.append('<div style="margin-bottom:50px;"></div>');
+			}
+			
+			$('#btn-download').click(function() {
+				var content = '';
+				var resultData = luckyResult.readResult(resultName);
+				for(var grade in resultData) {
+					var luckyList = resultData[grade];
+					content += '奖项 ' + grade + ' [ ' + luckyList.length + ' 人 ]\r\n';
+					
+					for(var i = 0; i < luckyList.length; i ++) {
+						var luckyOne = luckyList[i];
+						if(i > 0) content += ', ';
+						content += luckyOne.name + '(' + luckyOne.id + ')';
+					}
+					content += '\r\n\r\n';
+				}
+				
+				var data = new Blob([content],{type:"text/plain;charset=UTF-8"});
+				var downloadUrl = window.URL.createObjectURL(data);
+				var anchor = document.createElement("a");
+				anchor.href = downloadUrl;
+				anchor.download = resultName + "_luckylist.txt";
+				anchor.click();
+				window.URL.revokeObjectURL(data);
+			});
+		});
+		
+	</script>
+</div>

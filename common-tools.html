@@ -1,0 +1,30 @@
+﻿<button id="btn-fullscn" class="btn btn-sm btn-info" title="全屏">
+	<i class="fa fa-fw fa-arrows-alt fa-lg"></i>
+</button>
+<button id="btn-about" class="btn btn-sm btn-info" title="关于"
+	data-toggle="modal" data-target="#modal-about">
+	<i class="fa fa-fw fa-info fa-lg"></i>
+</button>
+<div id="modal-about" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog">
+	<div class="modal-dialog modal-sm">
+		<div class="modal-content" style="background:darkgrey;opacity:0.93;">
+			<div class="modal-body">
+				<div class="row">
+					<div class="col-xs-5" style="text-align:center;padding-top:20px;">
+						<img alt="logo" src="./img/logo.png" style="width:110px;">
+					</div>
+					<div class="col-xs-7" style="text-align:center;">
+						<h2>幸运抽奖</h2>
+						<p>出品人: Blade, Neo</p>
+						<p>&copy; Cisco 2015</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+	$(function() {
+		LuckyUtil.initFullscn($('#btn-fullscn'));
+	});
+</script>
