@@ -5,17 +5,19 @@ NB-LuckyDraw
 
 Dependency
 --------------
-* NW.js (Node-Webkit); [Home](http://nwjs.io/ "go to nwjs home page")
+* NW.js (Node-Webkit)
+    * home: [http://nwjs.io/](http://nwjs.io/)
+    * support OS: Win64, OSX64, Linux64, Win32, OSX32, Linux32
 
 Test Environment
 --------------
-* NW.js v0.12.2
-* Windows 7
+* NW.js v0.12.2 Win64
+* Windows 7 x64
 
 How to Use
 --------------
 ### Candidate Photo
-Copy candidate photoes image into folder named "candidate"
+Copy candidate photoes image into folder named **`candidate`**
 
 Photo file name format is: ${id}${name}.${ext}
 
@@ -31,7 +33,8 @@ e.g.:
 ### Basic Operation
 * Execute application
     * execute nw.js (in windows 7, file is "nw.exe")
-    * drag file "index.html", and drop it into main panel of nw.js
+    * drag file **`index.html`**, and drop it into main panel of nw.js
+    * application will running by **`full-screen`** mode. you may press key **`Esc`** to leave full-screen mode.
 * Operate application
     * lucky task
     ![](https://raw.githubusercontent.com/panfeng-pf/NB-LuckyDraw/master/snapshot/task.jpg)
